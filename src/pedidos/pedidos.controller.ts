@@ -59,4 +59,7 @@ export class PedidosController {
         console.log('Pedido eliminado exitosamente');
         return { message: 'Pedido eliminado exitosamente' };
     }
+
+    
+
 }
