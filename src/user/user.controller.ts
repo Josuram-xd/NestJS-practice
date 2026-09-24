@@ -1,4 +1,5 @@
 import { Controller, Get, Param, Post, Body, Delete, Put, NotFoundException, ForbiddenException, UnprocessableEntityException} from '@nestjs/common';
+import { CreateUserDto } from './user.dto';
 
 interface User {
     id: string;
@@ -71,17 +72,16 @@ export class UserController {
     }
 
     @Post()
-    createUser(@Body() user: User) {
-        console.log('Creando usuario: ', user);
-        if (user.email === '') {
-            throw new ForbiddenException('El correo no puede estar vacío');
-        }
-        // correo debe tener un @
-        if (!user.email.includes('@')) {
-            throw new UnprocessableEntityException('El correo no tiene un formato @example.com válido');
-        }
-        this.users.push(user);
-        return { message: 'Usuario creado', data: user };
+    createUser(@Body() userPayload: CreateUserDto) {
+        console.log('Creando usuario: ', userPayload);
+
+        const newUser = {
+            ...userPayload,
+            id: `${new Date().getTime()}`,
+            nickname: userPayload.name.substring(0, 3) + '123'
+        };
+        this.users.push(newUser);
+        return { message: 'Usuario creado', data: newUser };
     }
 
     @Delete(':id')
@@ -96,15 +96,20 @@ export class UserController {
 
     @Put(':id')
     updateUser(@Param('id') id: string, @Body() changes: User) {
-        console.log('.:: ID usuario: ' + id);
-        console.log('.:: Cambios: ', changes);
-        const position = this.users.findIndex(user => user.id === id);
-        if (position === -1) {
-            throw new NotFoundException('Usuario con id ' + id + ' no existe');
-        }
-        const currentData = this.users[position];
-        const updateUser = { ...currentData, ...changes };
-        this.users[position] = updateUser;
-        return { message: 'Usuario actualizado', data: this.users[position] };
+    const position = this.users.findIndex((user) => user.id === id);
+    if (position === -1) {
+        throw new NotFoundException(`Usuario con ID ${id} no existe`);
+    }
+    const currentData = this.users[position];
+    const updateUser = {
+        ...currentData,
+        ...changes,
+    };
+    this.users[position] = updateUser;
+
+        return {
+            msg: 'Usuario actualizado',
+            data: updateUser,
+        };
     }
 }

@@ -44,6 +44,7 @@ export class PedidosController {
     createPedidoOrdenCompra(@Body() pedido: Pedido) {
         console.log('Creando pedido: ', pedido);
         this.pedidos.push(pedido);
+        console.log('Pedido creado exitosamente');
         return { message: 'Pedido creado exitosamente', pedido };
     }
 
@@ -59,7 +60,4 @@ export class PedidosController {
         console.log('Pedido eliminado exitosamente');
         return { message: 'Pedido eliminado exitosamente' };
     }
-
-    
-
 }
