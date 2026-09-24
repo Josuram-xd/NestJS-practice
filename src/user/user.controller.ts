@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Body, Delete, Put} from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, Delete, Put, NotFoundException, ForbiddenException, UnprocessableEntityException} from '@nestjs/common';
 
 interface User {
     id: string;
@@ -48,7 +48,7 @@ export class UserController {
         const data = this.users.find(user => user.name.toLowerCase() === search);
         if (!data) {
             console.log('Usuario no encontrado');
-            return { message: 'Usuario no encontrado' };
+            throw new NotFoundException('Usuario con nombre ' + name + ' no existe');
         }
         console.log('Usuario encontrado: ', data);
         return data?.email;
@@ -57,24 +57,39 @@ export class UserController {
     @Get(':id')
     getUser(@Param('id') id: string) {
         console.log('Buscando usuario con id: ' + id);
-        const data = this.users.find(user => user.id === id);
-        if (!data) {
-            console.log('Usuario no encontrado');
-            return { message: 'Usuario no encontrado' };
+        const user = this.users.find(user => user.id === id);
+        console.log('.:: Usuario encontrado: ', user);
+        if (user === undefined) {
+            throw new NotFoundException('Usuario con id ' + id + ' no existe');
         }
-        console.log('Usuario encontrado: ', data);
-        return data;
+
+        // simulacion para error de permisos
+        if (user.id === '1') {
+            throw new ForbiddenException('Usuario con id ' + id + ' no tiene permisos para ser accedido');
+        }
+        return user;
     }
 
     @Post()
     createUser(@Body() user: User) {
         console.log('Creando usuario: ', user);
+        if (user.email === '') {
+            throw new ForbiddenException('El correo no puede estar vacío');
+        }
+        // correo debe tener un @
+        if (!user.email.includes('@')) {
+            throw new UnprocessableEntityException('El correo no tiene un formato @example.com válido');
+        }
+        this.users.push(user);
         return { message: 'Usuario creado', data: user };
     }
 
     @Delete(':id')
     deleteUser(@Param('id') id: string) {
         const position = this.users.findIndex(user => user.id === id);
+        if (position === -1) {
+            throw new NotFoundException('Usuario con id ' + id + ' no existe');
+        }
         this.users.splice(position, 1);
         return { message: 'Usuario eliminado' };
     }
@@ -85,7 +100,7 @@ export class UserController {
         console.log('.:: Cambios: ', changes);
         const position = this.users.findIndex(user => user.id === id);
         if (position === -1) {
-            return { message: 'Usuario no encontrado' };
+            throw new NotFoundException('Usuario con id ' + id + ' no existe');
         }
         const currentData = this.users[position];
         const updateUser = { ...currentData, ...changes };
