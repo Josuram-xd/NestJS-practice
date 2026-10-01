@@ -1,42 +1,36 @@
 import { Controller, Get, Param, Post, Body, Delete, Put, NotFoundException, ForbiddenException, UnprocessableEntityException} from '@nestjs/common';
 import { CreateUserDto } from './user.dto';
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-}
+import { UserService } from './user.service';
 
 @Controller('users')
 export class UserController {
-    private users: User[] = [
-        {
-            id: "1",
-            name: "John Doe",
-            email: "john.doe@example.com"
-        }, 
-        {
-            id: "2",
-            name: "Jane Smith",
-            email: "jane.smith@example.com"
-        }, 
-        {
-            id: "3",
-            name: "Alice Johnson",
-            email: "alice.johnson@example.com"
-        },
-        {
-            id: "4",
-            name: "Bob",
-            email: "bob@example.com"
-        },
-        {
-            id: "5",
-            name: "Adolfito",
-            email: "adolfitohitler@example.com"
-        }
-    ]
+    constructor(private userService: UserService) {}
 
+    @Get()
+    getUsers() {
+        return this.userService.findAll();
+    }
+
+    @Get(':id')
+    getUser(@Param('id') id: string) {
+        return this.userService.FindById(id);
+    }
+
+    @Get('name/:name')
+    getUserByName(@Param('name') name: string) {
+        return this.userService.search(name);
+    }
+
+    @Post()
+    createUser(@Body() userPayload: CreateUserDto) {
+        return this.userService.create(userPayload);
+    }
+
+    @Delete(':id')
+    deleteUser(@Param('id') id: string) {
+        return this.userService.delete(id);
+    }
+    /*
     @Get()
     getUsers() {
         return this.users;
@@ -111,5 +105,6 @@ export class UserController {
             msg: 'Usuario actualizado',
             data: updateUser,
         };
-    }
+    } 
+    */
 }
