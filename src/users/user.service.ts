@@ -1,80 +1,57 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from './user.model';
-import { CreateUserDto } from './user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
+import { CreateUserDto, UpdateUserDto } from './user.dto';
 
 @Injectable()
 export class UserService {
 
-    private users: User[] = [
-        {
-            id: "1",
-            name: "John Doe",
-            email: "john.doe@example.com",
-            isActive: true
-        }, 
-        {
-            id: "2",
-            name: "Jane Smith",
-            email: "jane.smith@example.com",
-            isActive: false
-        }, 
-        {
-            id: "3",
-            name: "Alice Johnson",
-            email: "alice.johnson@example.com",
-            isActive: true
-        },
-        {
-            id: "4",
-            name: "Bob",
-            email: "bob@example.com",
-            isActive: false
-        },
-        {
-            id: "5",
-            name: "Adolfito",
-            email: "adolfitohitler@example.com",
-            isActive: true
-        }
-    ]
+    constructor(
+        @InjectRepository(User)
+        private userRepository: Repository<User>,
+    ) {}
 
-    findAll(): User[] {
-        return this.users.filter(user => user.isActive);
+    async findAll() {
+        return await this.userRepository.find();
     }
 
-    FindById(id: string): User | undefined {
-        const user = this.users.find(user => user.id === id);
+    async findById(id: number) {
+        return await this.findOne(id);
+    }
+
+    async findByEmail(email: string) {
+        const user = await this.userRepository.findOneBy({ email });
         if (!user) {
-            throw new NotFoundException('Usuario con id ' + id + ' no existe');
+            throw new NotFoundException('Usuario con email ' + email + ' no existe');
         }
         return user;
     }
 
-    search(name: string): User | undefined {
-        const data = this.users.find(user => user.name === name);
-        if (!data) {
-            throw new NotFoundException('Usuario con nombre ' + name + ' no existe');
-        }
-        return data;
+    async create(userPayload: CreateUserDto) {
+        const { email, password } = userPayload;
+        const newUser = this.userRepository.create({ email, password });
+        return await this.userRepository.save(newUser);
     }
 
-    create(userPayload: CreateUserDto) {
-        const newUser = {
-            ...userPayload,
-            id: `${new Date().getTime()}`,
-            nickname: userPayload.name.substring(0, 3) + '123',
-            isActive: true
-        };
-        this.users.push(newUser);
-        return newUser;
+    async delete(id: number) {
+        const user = await this.findOne(id);
+        await this.userRepository.remove(user);
+        return user;
     }
-    
-    delete(id: string) {
-    const position = this.users.findIndex(user => user.id === id);
-        if (position === -1) {
+
+    async update(id: number, changes: UpdateUserDto) {
+        const user = await this.findOne(id);
+        const { email, password } = changes;
+        this.userRepository.merge(user, { email, password });
+        return await this.userRepository.save(user);
+    }
+
+    async findOne(id: number) {
+        const user = await this.userRepository.findOneBy({ id });
+        if (!user) {
             throw new NotFoundException('Usuario con id ' + id + ' no existe');
-        }   
-        this.users.splice(position, 1);
-        return { message: 'Usuario con id ' + id + ' eliminado correctamente' };
+        }
+        return user;
     }
 }
