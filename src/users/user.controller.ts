@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Post, Body, Delete, Put, NotFoundException, ForbiddenException, UnprocessableEntityException, ParseIntPipe} from '@nestjs/common';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto } from './dtos/user.dto';
 import { UserService } from './user.service';
 
 @Controller('users')
